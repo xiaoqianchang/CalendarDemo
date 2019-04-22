@@ -175,8 +175,8 @@ public class CalendarManager {
     // 事件提醒的设定，Reminders表
     ContentValues values = new ContentValues();
     values.put(CalendarContract.Reminders.EVENT_ID, ContentUris.parseId(newEvent));
-    // 提前10分钟有提醒
-    values.put(CalendarContract.Reminders.MINUTES, 10); // 应该在几分钟之前触发事件。
+    // 提醒：提前10分钟有提醒（若注释掉或者设为0表示日程发生时）
+//    values.put(CalendarContract.Reminders.MINUTES, 10); // 应该在几分钟之前触发事件。
     // 在服务上设置的报警的方法，下列设置之一：
     // 1.  METHOD_ALERT
     // 2.  METHOD_DEFAULT
