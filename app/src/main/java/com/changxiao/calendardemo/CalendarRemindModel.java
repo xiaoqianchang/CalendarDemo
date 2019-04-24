@@ -9,6 +9,9 @@ package com.changxiao.calendardemo;
  */
 public class CalendarRemindModel {
 
+  private static final int TYPE_FALSE = 0; // false
+  private static final int TYPE_TRUE = 1; // true
+
   private String title; // 日程事件标题
   private String description; // 日程内容（备注、附注）
   private long startDate; // 日程事件的启动时间，使用从纪元开始的UTC毫秒计时
@@ -16,10 +19,11 @@ public class CalendarRemindModel {
 
   private String location; // 日程事件发生的地点
   private String timeZone; // 时区
-  private int hasAlarm; // 是否事件触发报警:0=false, 1=true
+  private int hasAlarm; // 是否事件触发报警:0=false, 1=true（是否有闹钟提醒）
+  private int allDay; // 是否全天事件：0=false, 1=true
   private int eventStatus; // 事件状态:暂定(0)，确认(1)或取消(2)
-  private int availability; // 我的状态:0=忙碌，1=有空
-  private int accessLevel; // 访问权限：默认=0，机密=1，私有=2，公共=3
+  private int availability; // 我的状态:0=忙碌，1=有空，2=我的状态可能改变但应该被认为是忙时间冲突
+  private int accessLevel; // 访问权限：默认=0，机密=1，私有=2，公共（任何人都可以访问）=3
 
   public String getTitle() {
     return title;
@@ -77,6 +81,14 @@ public class CalendarRemindModel {
     this.hasAlarm = hasAlarm;
   }
 
+  public int getAllDay() {
+    return allDay;
+  }
+
+  public void setAllDay(int allDay) {
+    this.allDay = allDay;
+  }
+
   public int getEventStatus() {
     return eventStatus;
   }
@@ -99,5 +111,13 @@ public class CalendarRemindModel {
 
   public void setAccessLevel(int accessLevel) {
     this.accessLevel = accessLevel;
+  }
+
+  /**
+   * 是否为全天
+   * @return
+   */
+  public boolean isAllDay() {
+    return allDay == TYPE_TRUE;
   }
 }
