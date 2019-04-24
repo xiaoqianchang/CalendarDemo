@@ -46,7 +46,6 @@ import java.util.TimeZone;
  */
 public class CalendarManager {
 
-  private static final long ONE_HOUR = 1 * 60 * 60 * 1000;
   // 系统calendar content provider相关的uri，以下为Android2.2版本以后的uri
   private static String CALANDER_URL = "content://com.android.calendar/calendars";
   private static String CALANDER_EVENT_URL = "content://com.android.calendar/events";
@@ -136,11 +135,11 @@ public class CalendarManager {
   /**
    * 添加日历事件、日程
    * @param context
-   * @param title 日程标题
-   * @param description 备注
-   * @param beginTime 日程开始时间
    */
-  public static boolean addCalendarEvent(Context context, String title, String description, long beginTime) {
+  public static boolean addCalendarEvent(Context context, CalendarRemindModel calendarRemindModel) {
+    if (null == calendarRemindModel) {
+      return false;
+    }
     // 获取日历账户的id
     int calId = checkAndAddCalendarAccount(context);
     if (calId < 0) {
@@ -149,23 +148,25 @@ public class CalendarManager {
     }
 
     ContentValues event = new ContentValues();
-    event.put(CalendarContract.Events.TITLE, title); // 事件的标题
-    event.put(CalendarContract.Events.DESCRIPTION, description); // 事件的描述
     // 插入账户的id
     event.put(CalendarContract.Events.CALENDAR_ID, calId); // 日历事件属于的Calendars#_ID，必须有
+    event.put(CalendarContract.Events.TITLE, calendarRemindModel.getTitle()); // 事件的标题
+    event.put(CalendarContract.Events.DESCRIPTION, calendarRemindModel.getDescription()); // 事件的备注
 
     Calendar mCalendar = Calendar.getInstance();
-    mCalendar.setTimeInMillis(beginTime); // 设置开始时间
+    mCalendar.setTimeInMillis(calendarRemindModel.getStartDate()); // 设置开始时间
 //    mCalendar.set(2019, 4, 22, 18, 0);
 //    mCalendar.getTimeInMillis();
     long start = mCalendar.getTime().getTime();
-    mCalendar.setTimeInMillis(start + ONE_HOUR); // 设置终止时间
+    mCalendar.setTimeInMillis(calendarRemindModel.getEndDate()); // 设置终止时间
     long end = mCalendar.getTime().getTime();
 
     event.put(CalendarContract.Events.DTSTART, start); // 事件的启动时间，使用从纪元开始的UTC毫秒计时，必须有
     event.put(CalendarContract.Events.DTEND, end); // 事件的结束时间，使用从纪元开始的UTC毫秒计时，对于非重复发生的事件，必须有
-    event.put(CalendarContract.Events.HAS_ALARM, 1); // 设置有闹钟提醒
-    event.put(CalendarContract.Events.EVENT_TIMEZONE, "Asia/Shanghai");  // 事件所针对的时区，必须有
+    event.put(CalendarContract.Events.STATUS, 1); // 事件状态:暂定(0)，确认(1)或取消(2)
+    event.put(CalendarContract.Events.HAS_ALARM, calendarRemindModel.getHasAlarm()); // 设置有闹钟提醒
+    String timeZone = calendarRemindModel.getTimeZone();
+    event.put(CalendarContract.Events.EVENT_TIMEZONE, TextUtils.isEmpty(timeZone) ? "Asia/Shanghai" : timeZone); // 事件所针对的时区，必须有
     // 添加事件
     Uri newEvent = context.getContentResolver().insert(Uri.parse(CALANDER_EVENT_URL), event);
     if (newEvent == null) {
@@ -183,6 +184,7 @@ public class CalendarManager {
     // 3.  METHOD_EMAIL
     // 4.  METHOD_SMS
     values.put(CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_ALERT);
+    // 这里会有SQLiteException（比如Account不对时会抛出此异常）
     Uri uri = context.getContentResolver().insert(Uri.parse(CALANDER_REMIDER_URL), values);
     if(uri == null) {
       // 添加闹钟提醒失败直接返回
