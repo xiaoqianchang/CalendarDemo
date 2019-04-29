@@ -23,6 +23,9 @@ import java.util.TimeZone;
 1.需要有读写日历权限
 2.如果没有日历账户需要先创建账户
 3.实现日历事件增删改查、提醒功能
+
+测试总结：
+1. 如果只有开始时间无结束时间，会报错，java.lang.IllegalArgumentException: DTEND and DURATION cannot both be null for an event.
  */
 
 /**
