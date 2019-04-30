@@ -68,10 +68,15 @@ public class CalendarManager {
   private String CALANDER_EVENT_URL = "content://com.android.calendar/events";
   private String CALANDER_REMIDER_URL = "content://com.android.calendar/reminders";
   private String CALANDER_ATTENDEE_URL = "content://com.android.calendar/attendees";
-//  private Uri calendarsUri = CalendarContract.Calendars.CONTENT_URI;
-//  private Uri eventsUri = CalendarContract.Events.CONTENT_URI;
-//  private Uri remindersUri = CalendarContract.Reminders.CONTENT_URI;
-//  private Uri attendeesUri = CalendarContract.Attendees.CONTENT_URI;
+
+  /**
+   * 使用以下Uri时，Android版本>=14;
+   * 注意引用包路径：android.provider.CalendarContract下的；
+   **/
+  private Uri calendarsUri = CalendarContract.Calendars.CONTENT_URI;
+  private Uri eventsUri = CalendarContract.Events.CONTENT_URI;
+  private Uri remindersUri = CalendarContract.Reminders.CONTENT_URI;
+  private Uri attendeesUri = CalendarContract.Attendees.CONTENT_URI;
 
   /** Calendars table columns */
   public static final String[] CALENDARS_COLUMNS = new String[] {
@@ -138,7 +143,7 @@ public class CalendarManager {
    * 获取时区
    * @return
    */
-  public static String[] getTimeZones() {
+  public String[] getTimeZones() {
     return TimeZone.getAvailableIDs();
   }
 
@@ -147,203 +152,80 @@ public class CalendarManager {
    * @return Uri
    * @throws Exception
    */
-  public boolean updateReminder(CalendarRemindModel model) {
+  public boolean updateReminder(Context context, ReminderModel model) {
     if (null == model) {
       return false;
     }
-    String id		= param.get("id");
-    if (!isExistReminder(Long.parseLong(id))) {
-      result.put("result", "0");
-      result.put("obj", "日程提醒id无效，id不存在！");
-      return result;
-    }
-    String mimutes 		= param.get("mimutes");//提醒在事件前几分钟后发出
-    String method		= param.get("method");//提醒方法:METHOD_DEFAULT:0,*_ALERT:1,*_EMAIL:2,*_SMS:3
-
-    if ( Utils.isEmpty(mimutes) && Utils.isEmpty(method) ){
-      result.put("result", "0");
-      result.put("obj", "日程提醒更新的信息不能都为空！");
-      return result;
+    if (!isExistReminder(model.getId())) {
+      return false;
     }
     ContentValues reminderVal = new ContentValues();
 
-    if (!Utils.isEmpty(mimutes)) {
-      //提醒时间
-      int m = Utils.isNumber(mimutes) ? Integer.parseInt(mimutes) : 0;
-      reminderVal.put(Reminders.MINUTES, m);//提醒在事件前多少分钟后发出
+    reminderVal.put(Reminders.MINUTES, model.getMinutes()); // 提醒在事件前多少分钟后发出
+    //提醒方法
+    int methodType = Reminders.METHOD_DEFAULT;
+    int method = model.getMethod();
+    if (method == 1) {
+      methodType = Reminders.METHOD_ALERT;
+    } else if (method == 2) {
+      methodType = Reminders.METHOD_EMAIL;
+    } else if (method == 3) {
+      methodType = Reminders.METHOD_SMS;
     }
-    if (!Utils.isEmpty(method)) {
-      //提醒方法
-      int methodType = Reminders.METHOD_DEFAULT;
-      if (method.equals("1")) {
-        methodType = Reminders.METHOD_ALERT;
-      } else if (method.equals("2")) {
-        methodType = Reminders.METHOD_EMAIL;
-      } else if (method.equals("3")) {
-        methodType = Reminders.METHOD_SMS;
-      }
-      reminderVal.put(Reminders.METHOD, methodType);
-    }
+    reminderVal.put(Reminders.METHOD, methodType);
 
     try{
-      int n = resolver.update(remindersUri, reminderVal, Reminders._ID + "=" + id , null);
-      result.put("result", "1");
-      result.put("obj", n + "");
+      context.getContentResolver().update(Uri.parse(CALANDER_REMIDER_URL), reminderVal, Reminders._ID + "=" + model.getId() , null);
+      return true;
     } catch (Exception e) {
-      Log.i(Const.APPTAG, e.getMessage());
-      result.put("result", "-1");
-      result.put("obj", e.getMessage());
+      e.printStackTrace();
     }
-    return result;
+    return false;
   }
 
-  /**
-   * 更新日程参与者
-   * @param param
-   * @param ops
-   * @return Uri
-   * @throws Exception
-   */
-  public Map<String, String> updateAttendee(Map<String, String> param){
-    Map<String, String> result = new HashMap<String, String>();
-    if (Utils.isEmpty(param)) {
-      result.put("result", "0");
-      result.put("obj", "更新参数为空！");
-      return null;
-    }
-    String id		= param.get("id");
-    if (!isExistAttendee(Long.parseLong(id))) {
-      result.put("result", "0");
-      result.put("obj", "参与者id无效，id不存在！");
-      return null;
-    }
-    String name 		= param.get("name");//参与者姓名
-    String email		= param.get("email");//参与者电子邮件
-    if ( Utils.isEmpty(name) && Utils.isEmpty(email) ){
-      result.put("result", "0");
-      result.put("obj", "参与人更新的信息不能都为空！");
-      return result;
-    }
-    ContentValues attendeesVal = new ContentValues();
-    if (!Utils.isEmpty(email)) {
-      attendeesVal.put(Attendees.ATTENDEE_NAME, name);
-    }
-    if (!Utils.isEmpty(email)) {
-      attendeesVal.put(Attendees.ATTENDEE_EMAIL, email);//参与者 email
-    }
-
-    try{
-      int n = resolver.update(attendeesUri, attendeesVal, Attendees._ID + "=" + id , null);
-      result.put("result", "1");
-      result.put("obj", n + "");
-    } catch (Exception e) {
-      Log.i(Const.APPTAG, e.getMessage());
-      result.put("result", "-1");
-      result.put("obj", e.getMessage());
-    }
-    return null;
-  }
   /**
    * 更新日程事件
-   * @param param
+   * @param model
    * @return
    */
-  public Map<String, String> updateEvent(Map<String, String> param){
-    Map<String, String> result = new HashMap<String, String>();
-    if (Utils.isEmpty(param)) {
-      result.put("result", "0");
-      result.put("obj", "更新参数为空！");
-      return null;
+  public boolean updateEvent(Context context, EventModel model) {
+    if (model == null) {
+      return false;
     }
-    String id 			= param.get("id");
-    if (!isExistEvent(Long.parseLong(id))) {
-      result.put("result", "0");
-      result.put("obj", "事件id不能为空！");
-      return result;
+    if (!isExistEvent(model.getId())) {
+      return false;
     }
 
-    String calendarId 	= param.get("calendarId");
-    String title 		= param.get("title");
-    String description 	= param.get("description");
-    String location 	= param.get("location");
-    String startDate	= param.get("startDate");
-    String endDate		= param.get("endDate");
-    String status		= param.get("status");
-    String timeZone		= param.get("timeZone");
-    String hasAlarm 	= param.get("hasAlarm");
-    String allDay		= param.get("allDay");
-    String availability	= param.get("availability");
-    String accessLevel	= param.get("accessLevel");
-
-    if (!Utils.isNumber(calendarId) && Utils.isEmpty(title) && Utils.isEmpty(description) && Utils.isEmpty(location)
-        && Utils.isEmpty(startDate) && Utils.isEmpty(endDate) && Utils.isEmpty(status)){
-      result.put("result", "0");
-      result.put("obj", "事件更新的信息不能都为空！");
-      return result;
-    }
     ContentValues values = new ContentValues();
 
-    if (Utils.isNumber(calendarId)) {
-      values.put(Events.CALENDAR_ID, calendarId);
-    }
-    if (!Utils.isEmpty(title)) {
-      values.put(Events.TITLE, title);
-    }
-    if (!Utils.isEmpty(description)) {
-      values.put(Events.DESCRIPTION, description);
-    }
-    if (!Utils.isEmpty(location)) {
-      values.put(Events.EVENT_LOCATION, location);
-    }
+    values.put(Events.CALENDAR_ID, model.getCalendarId());
+    values.put(Events.TITLE, model.getTitle());
+    values.put(Events.DESCRIPTION, model.getDescription());
+    values.put(Events.EVENT_LOCATION, model.getEventLocation());
 
     //计算开始、结束时间，全部用Date也可以。
     Calendar startCld 	= Calendar.getInstance();
     Calendar endCld 	= Calendar.getInstance();
     //如果是全天事件的话，取开始时间的那一整天
-    if ((Utils.isNumber(allDay) && Integer.parseInt(allDay) == 1) && !Utils.isEmpty(startDate)) {
-      Calendar cld 		= Calendar.getInstance();
-      cld = Utils.parseStrToCld(startDate);
-      //开始时间
-      startCld.set(cld.get(Calendar.YEAR), cld.get(Calendar.MONTH), cld.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
-      //结束时间
-      endCld.set(cld.get(Calendar.YEAR), cld.get(Calendar.MONTH), cld.get(Calendar.DAY_OF_MONTH), 24 , 0 , 0);
+    if (model.isAllDay()) {
       values.put(Events.ALL_DAY, true);
-      values.put(Events.DTSTART, startCld.getTimeInMillis());
-      values.put(Events.DTEND, endCld.getTimeInMillis());
+      values.put(Events.DTSTART, model.getDtstart());
+      values.put(Events.DTEND, model.getDtend());
     } else {
-      //开始时间
-      startCld = Utils.parseStrToCld(startDate);
-      //结束时间
-      endCld = Utils.parseStrToCld(endDate);
-      if (!Utils.isEmpty(startDate)) {
-        values.put(Events.DTSTART, startCld.getTimeInMillis());
-      }
-      if (!Utils.isEmpty(endDate)) {
-        values.put(Events.DTEND, endCld.getTimeInMillis());
-      }
+      values.put(Events.DTSTART, model.getDtstart());
+      values.put(Events.DTEND, model.getDtend());
     }
-    if (!Utils.isEmpty(timeZone)) {
-      values.put(Events.EVENT_TIMEZONE, timeZone);
-    }
-    if (Utils.isNumber(hasAlarm)) {
-      values.put(Events.HAS_ALARM, hasAlarm);
-    }
-    if (Utils.isNumber(availability)) {
-      values.put(Events.AVAILABILITY, availability);
-    }
-    if (Utils.isNumber(accessLevel)) {
-      values.put(Events.ACCESS_LEVEL, accessLevel);
-    }
+    values.put(Events.EVENT_TIMEZONE, model.getEventTimezone());
+    values.put(Events.HAS_ALARM, model.isHasAlarm());
+    values.put(Events.AVAILABILITY, model.getAvailability());
+    values.put(Events.ACCESS_LEVEL, model.getAccessLevel());
     try {
-      int n = resolver.update(eventsUri, values, Events._ID + "=" + id, null);
-      result.put("result", "1");
-      result.put("obj", n + "");
+      context.getContentResolver().update(Uri.parse(CALANDER_EVENT_URL), values, Events._ID + "=" + model.getId(), null);
+      return true;
     } catch (Exception e) {
-      Log.i(Const.APPTAG, e.getMessage());
-      result.put("result", "-1");
-      result.put("obj", e.getMessage());
+      e.printStackTrace();
     }
-    return result;
+    return false;
   }
 
   /**
@@ -351,69 +233,51 @@ public class CalendarManager {
    * @param model
    * @return
    */
-  public List<CalendarRemindModel> queryEvents(CalendarRemindModel model){
-    List<Map<String, Object>> result = new ArrayList<Map<String,Object>>();
+  public List<EventModel> queryEvents(Context context, EventModel model) {
+    List<EventModel> result = new ArrayList<>();
 
     StringBuilder selection = new StringBuilder();
-    List<String> selectionArgs = new ArrayList<String>();
+    List<String> selectionArgs = new ArrayList<>();
     if (model != null) {
       selection.append(" 1=1 ");
 
-//      String calendarId 	= model.get("calendarId");
-      String eventId 		= param.get("id");
-      String title 		= param.get("title");
-      String description 	= param.get("description");
-      String location 	= param.get("location");
-      String startDate	= param.get("startDate");
-      String endDate		= param.get("endDate");
-      String status		= param.get("status");
+      String calendarId 	= String.valueOf(model.getCalendarId());
+      String eventId 		= String.valueOf(model.getId());
+      String title 		= model.getTitle();
+      String description 	= model.getDescription();
+      String location 	= model.getEventLocation();
+      String startDate	= String.valueOf(model.getDtstart());
+      String endDate		= String.valueOf(model.getDtend());
+      String status		= String.valueOf(model.getEventStatus());
 
-      if (Utils.isNumber(calendarId)) {
-        selection.append(" AND " + Events.CALENDAR_ID + "=? ");
-        selectionArgs.add(calendarId);
-      }
-      if (Utils.isNumber(eventId)) {
-        selection.append(" AND " + Events._ID + "=? ");
-        selectionArgs.add(eventId);
-      }
-      if (!Utils.isEmpty(title)) {
-        selection.append(" AND " + Events.TITLE + " LIKE ? ");
-        selectionArgs.add("%" + title + "%");
-      }
-      if (!Utils.isEmpty(description)) {
-        selection.append(" AND " + Events.DESCRIPTION + " LIKE ? ");
-        selectionArgs.add("%" + description + "%");
-      }
-      if (!Utils.isEmpty(location)) {
-        selection.append(" AND " + Events.EVENT_LOCATION + " LIKE ? ");
-        selectionArgs.add("%" + location + "%");
-      }
-      if (Utils.isNumber(status)) {
-        selection.append(" AND " + Events.STATUS + " =? ");
-        selectionArgs.add(status);
-      }
+      selection.append(" AND " + Events.CALENDAR_ID + "=? ");
+      selectionArgs.add(calendarId);
+      selection.append(" AND " + Events._ID + "=? ");
+      selectionArgs.add(eventId);
+      selection.append(" AND " + Events.TITLE + " LIKE ? ");
+      selectionArgs.add("%" + title + "%");
+      selection.append(" AND " + Events.DESCRIPTION + " LIKE ? ");
+      selectionArgs.add("%" + description + "%");
+      selection.append(" AND " + Events.EVENT_LOCATION + " LIKE ? ");
+      selectionArgs.add("%" + location + "%");
+      selection.append(" AND " + Events.STATUS + " =? ");
+      selectionArgs.add(status);
 
-      if (!Utils.isEmpty(startDate)) {
-        long startMillis = Utils.parseStrToCld(startDate).getTimeInMillis();
-        selection.append(" AND " + Events.DTSTART + " >=? ");
-        selectionArgs.add(startMillis + "");
-      }
-      if (!Utils.isEmpty(endDate)) {
-        long endMillis   = Utils.parseStrToCld(endDate).getTimeInMillis();
-        selection.append(" AND " + Events.DTEND + " <=? ");
-        selectionArgs.add(endMillis + "");
-      }
-      Log.i(Const.APPTAG, "查询条件:" + selection.toString());
+      selection.append(" AND " + Events.DTSTART + " >=? ");
+      selectionArgs.add(startDate + "");
+      selection.append(" AND " + Events.DTEND + " <=? ");
+      selectionArgs.add(endDate + "");
     }
 //		EVENTS_COLUMNS 换成 null 查询所有字段
-    Cursor eventsCursor = resolver.query(
-        eventsUri,
+    Cursor eventsCursor = context.getContentResolver().query(
+        Uri.parse(CALANDER_EVENT_URL),
         EVENTS_COLUMNS,
         selection.length() == 0 ? null : selection.toString(),
         selectionArgs.size() == 0 ?	null : selectionArgs.toArray(new String[]{}),
         null);
 
-    Map<String, Object> event = new HashMap<String, Object>();
+    Map<String, Object> event = new HashMap<>();
+    EventModel eventModel = new EventModel();
     while (eventsCursor.moveToNext()) {
       //以下字段解释，在添加事件里可查看addEvents()
       String eid 		= eventsCursor.getString(eventsCursor.getColumnIndex(Events._ID));
@@ -432,7 +296,7 @@ public class CalendarManager {
 
       Calendar calendar = Calendar.getInstance();
 
-      event.put("id",				eid);
+      eventModel.setId(eid);
       event.put("calendarId",		calendarId);
       event.put("title",			title);
       event.put("description",	description);
@@ -451,16 +315,16 @@ public class CalendarManager {
       event.put("accessLevel",	accessLevel);
       event.put("status",			status);
       //查询提醒
-      Cursor remindersCursor = resolver.query(
-          remindersUri,
+      Cursor remindersCursor = context.getContentResolver().query(
+          Uri.parse(CALANDER_REMIDER_URL),
           REMINDERS_COLUMNS,
           Reminders.EVENT_ID + "=?",
           new String[]{ eid },
           null);
 
-      List<Map<String, Object>> reminders = new ArrayList<Map<String,Object>>();
+      List<Map<String, Object>> reminders = new ArrayList<>();
       while (remindersCursor.moveToNext()) {
-        Map<String, Object> reminder = new HashMap<String, Object>();
+        Map<String, Object> reminder = new HashMap<>();
 
         String rid 		= remindersCursor.getString(remindersCursor.getColumnIndex(Reminders._ID));
         String eventId 	= remindersCursor.getString(remindersCursor.getColumnIndex(Reminders.EVENT_ID));
@@ -476,8 +340,8 @@ public class CalendarManager {
       remindersCursor.close();
       event.put("reminders", reminders);
       //查询参与人
-      Cursor attendeesCursor = resolver.query(
-          attendeesUri,
+      Cursor attendeesCursor = context.getContentResolver().query(
+          Uri.parse(CALANDER_ATTENDEE_URL),
           ATTENDEES_COLUMNS,
           Attendees.EVENT_ID + "=?",
           new String[]{ eid },
