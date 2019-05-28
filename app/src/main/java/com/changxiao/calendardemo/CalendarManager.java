@@ -296,17 +296,17 @@ public class CalendarManager {
 
       Calendar calendar = Calendar.getInstance();
 
-      eventModel.setId(eid);
+//      eventModel.setId(eid);
       event.put("calendarId",		calendarId);
       event.put("title",			title);
       event.put("description",	description);
       event.put("location",		location);
 
       calendar.setTimeInMillis(startDate);
-      event.put("startDate",		Utils.getFormatCld(calendar));
+//      event.put("startDate",		Utils.getFormatCld(calendar));
 
       calendar.setTimeInMillis(endDate);
-      event.put("endDate",		Utils.getFormatCld(calendar));
+//      event.put("endDate",		Utils.getFormatCld(calendar));
 
       event.put("timeZone",		timeZone);
       event.put("hasAlarm",		hasAlarm);
@@ -364,7 +364,7 @@ public class CalendarManager {
       attendeesCursor.close();
       event.put("attendees", reminders);
 
-      result.add(event);
+//      result.add(event);
     }
     eventsCursor.close();
 
@@ -429,8 +429,9 @@ public class CalendarManager {
       // 添加事件（这里如果calId不正确不会崩溃）
       return mContext.getContentResolver().insert(Uri.parse(CALANDER_EVENT_URL), event);
     } catch (Exception e) {
-      e.prin
+      e.printStackTrace();
     }
+    return null;
   }
 
   /**
@@ -438,74 +439,74 @@ public class CalendarManager {
    * @param calendars
    * @return Map<String, Object>
    */
-  public boolean insertEvents(List<CalendarRemindModel> calendars) {
-    if (calendars == null || calendars.isEmpty()) {
-      return false;
-    }
-    ArrayList<ContentProviderOperation> ops = null;
-
-    for (int i = 0; i < calendars.size(); i++) {
-      //获得日程
-      CalendarRemindModel calendar = calendars.get(i);
-      //插入事件
-      Uri eUri = null;
-      try {
-        eUri = insertEvent(calendar);
-      } catch (Exception e) {
-        addResult.add("第" + (i + 1) + "条日程，添加事件失败：" + e.getMessage());
-      }
-      //如果事件插入成功，则插入提醒和参与者
-      if (!Utils.isEmpty(eUri)) {
-        String eventId = eUri.getLastPathSegment();
-        //存入插入事件的结果
-        addResult.add(eUri.toString());
-
-        ops = new ArrayList<ContentProviderOperation>();
-        //插入提醒，可以添加多个提醒
-        Map<Object, Map<String, String>> reminders = (Map<Object, Map<String, String>>) calendar.get("reminders");
-        if (!Utils.isEmpty(reminders)) {
-          for (Object key : reminders.keySet()) {
-            reminders.get(key).put("eventId", eventId);
-            try {
-              insertReminder(reminders.get(key), ops);
-            } catch (Exception e) {
-              Log.i(Const.APPTAG, e.getMessage());
-            }
-          }
-        }
-        //插入参与者，可以添加多个参与者
-        Map<Object, Map<String, String>> attendees = (Map<Object, Map<String, String>>) calendar.get("attendees");
-        if (!Utils.isEmpty(attendees)) {
-          for (Object key : attendees.keySet()) {
-            attendees.get(key).put("eventId", eventId);
-            try {
-              insertAttendee(attendees.get(key), ops);
-            } catch (Exception e) {
-              Log.i(Const.APPTAG, e.getMessage());
-            }
-          }
-        }
-        if (!Utils.isEmpty(ops)) {
-          //执行批量插入
-          try {
-            ContentProviderResult[] cps = resolver.applyBatch(CalendarContract.AUTHORITY, ops);
-            //event表插入返回的Uri集合
-            for (ContentProviderResult cp : cps) {
-              Log.i(Const.APPTAG, cp.toString());
-              addResult.add(cp.uri.toString());
-            }
-          } catch (Exception e) {
-            Log.i(Const.APPTAG, e.getMessage());
-            addResult.add("第" + (i + 1) + "条日程，添加(提醒和参与者)失败:" + e.getMessage());
-          }
-        }
-      }
-    }
-    result.put("result", "1");
-    result.put("obj", addResult);
-
-    return result;
-  }
+//  public boolean insertEvents(List<CalendarRemindModel> calendars) {
+//    if (calendars == null || calendars.isEmpty()) {
+//      return false;
+//    }
+//    ArrayList<ContentProviderOperation> ops = null;
+//
+//    for (int i = 0; i < calendars.size(); i++) {
+//      //获得日程
+//      CalendarRemindModel calendar = calendars.get(i);
+//      //插入事件
+//      Uri eUri = null;
+//      try {
+//        eUri = insertEvent(calendar);
+//      } catch (Exception e) {
+//        addResult.add("第" + (i + 1) + "条日程，添加事件失败：" + e.getMessage());
+//      }
+//      //如果事件插入成功，则插入提醒和参与者
+//      if (!Utils.isEmpty(eUri)) {
+//        String eventId = eUri.getLastPathSegment();
+//        //存入插入事件的结果
+//        addResult.add(eUri.toString());
+//
+//        ops = new ArrayList<ContentProviderOperation>();
+//        //插入提醒，可以添加多个提醒
+//        Map<Object, Map<String, String>> reminders = (Map<Object, Map<String, String>>) calendar.get("reminders");
+//        if (!Utils.isEmpty(reminders)) {
+//          for (Object key : reminders.keySet()) {
+//            reminders.get(key).put("eventId", eventId);
+//            try {
+//              insertReminder(reminders.get(key), ops);
+//            } catch (Exception e) {
+//              Log.i(Const.APPTAG, e.getMessage());
+//            }
+//          }
+//        }
+//        //插入参与者，可以添加多个参与者
+//        Map<Object, Map<String, String>> attendees = (Map<Object, Map<String, String>>) calendar.get("attendees");
+//        if (!Utils.isEmpty(attendees)) {
+//          for (Object key : attendees.keySet()) {
+//            attendees.get(key).put("eventId", eventId);
+//            try {
+//              insertAttendee(attendees.get(key), ops);
+//            } catch (Exception e) {
+//              Log.i(Const.APPTAG, e.getMessage());
+//            }
+//          }
+//        }
+//        if (!Utils.isEmpty(ops)) {
+//          //执行批量插入
+//          try {
+//            ContentProviderResult[] cps = resolver.applyBatch(CalendarContract.AUTHORITY, ops);
+//            //event表插入返回的Uri集合
+//            for (ContentProviderResult cp : cps) {
+//              Log.i(Const.APPTAG, cp.toString());
+//              addResult.add(cp.uri.toString());
+//            }
+//          } catch (Exception e) {
+//            Log.i(Const.APPTAG, e.getMessage());
+//            addResult.add("第" + (i + 1) + "条日程，添加(提醒和参与者)失败:" + e.getMessage());
+//          }
+//        }
+//      }
+//    }
+//    result.put("result", "1");
+//    result.put("obj", addResult);
+//
+//    return result;
+//  }
   /**
    * 插入日程参与者，如果参数ops不为空，则不执行插入，添加到ops里执行批量插入
    * @param attendees
@@ -513,112 +514,112 @@ public class CalendarManager {
    * @return Uri
    * @throws Exception
    */
-  public Uri insertAttendee(Map<String, String> attendees, ArrayList<ContentProviderOperation> ops) throws Exception{
-    if (Utils.isEmpty(attendees)) {
-      return null;
-    }
-    try {
-      String eventId		= attendees.get("eventId");//外键事件id
-      String name 		= attendees.get("name");//参与者姓名
-      //如果时间id、或者参与姓名为空，不添加参与者
-      if (!isExistEvent(Long.parseLong(eventId)) || Utils.isEmpty(name)) {
-        return null;
-      }
-      String email		= attendees.get("email");//参与者电子邮件
-
-      /** 没明白具体什么意思，暂时用默认值  */
-      int relationship	= Attendees.RELATIONSHIP_ATTENDEE;//与会者与事件的关系
-      int type			= Attendees.TYPE_OPTIONAL;//与会者的类型
-      int status			= Attendees.ATTENDEE_STATUS_INVITED;//与会者的状态
-      if (ops == null) {
-        ContentValues attendeesVal = new ContentValues();
-        attendeesVal.put(Attendees.EVENT_ID, eventId);
-        attendeesVal.put(Attendees.ATTENDEE_NAME, name);
-        if (!Utils.isEmpty(email)) {
-          attendeesVal.put(Attendees.ATTENDEE_EMAIL, email);//参与者 email
-        }
-
-        attendeesVal.put(Attendees.ATTENDEE_RELATIONSHIP, relationship);//关系
-        attendeesVal.put(Attendees.ATTENDEE_TYPE, type);//类型
-        attendeesVal.put(Attendees.ATTENDEE_STATUS, status);//状态
-
-        Uri uri = resolver.insert(attendeesUri, attendeesVal);
-        return uri;
-      } else {
-        Builder builder = ContentProviderOperation.newInsert(attendeesUri)
-            .withYieldAllowed(true)
-            .withValue(Attendees.EVENT_ID, eventId)
-            .withValue(Attendees.ATTENDEE_NAME, name)
-            .withValue(Attendees.ATTENDEE_EMAIL, email)
-            .withValue(Attendees.ATTENDEE_RELATIONSHIP, relationship)
-            .withValue(Attendees.ATTENDEE_TYPE, type)
-            .withValue(Attendees.ATTENDEE_STATUS, status);
-        if (!Utils.isEmpty(email)) {
-          builder.withValue(Attendees.ATTENDEE_EMAIL, email);
-        }
-        ops.add(builder.build());
-      }
-    }catch (Exception e) {
-      throw e;
-    }
-    return null;
-  }
+//  public Uri insertAttendee(Map<String, String> attendees, ArrayList<ContentProviderOperation> ops) throws Exception{
+//    if (Utils.isEmpty(attendees)) {
+//      return null;
+//    }
+//    try {
+//      String eventId		= attendees.get("eventId");//外键事件id
+//      String name 		= attendees.get("name");//参与者姓名
+//      //如果时间id、或者参与姓名为空，不添加参与者
+//      if (!isExistEvent(Long.parseLong(eventId)) || Utils.isEmpty(name)) {
+//        return null;
+//      }
+//      String email		= attendees.get("email");//参与者电子邮件
+//
+//      /** 没明白具体什么意思，暂时用默认值  */
+//      int relationship	= Attendees.RELATIONSHIP_ATTENDEE;//与会者与事件的关系
+//      int type			= Attendees.TYPE_OPTIONAL;//与会者的类型
+//      int status			= Attendees.ATTENDEE_STATUS_INVITED;//与会者的状态
+//      if (ops == null) {
+//        ContentValues attendeesVal = new ContentValues();
+//        attendeesVal.put(Attendees.EVENT_ID, eventId);
+//        attendeesVal.put(Attendees.ATTENDEE_NAME, name);
+//        if (!Utils.isEmpty(email)) {
+//          attendeesVal.put(Attendees.ATTENDEE_EMAIL, email);//参与者 email
+//        }
+//
+//        attendeesVal.put(Attendees.ATTENDEE_RELATIONSHIP, relationship);//关系
+//        attendeesVal.put(Attendees.ATTENDEE_TYPE, type);//类型
+//        attendeesVal.put(Attendees.ATTENDEE_STATUS, status);//状态
+//
+//        Uri uri = resolver.insert(attendeesUri, attendeesVal);
+//        return uri;
+//      } else {
+//        Builder builder = ContentProviderOperation.newInsert(attendeesUri)
+//            .withYieldAllowed(true)
+//            .withValue(Attendees.EVENT_ID, eventId)
+//            .withValue(Attendees.ATTENDEE_NAME, name)
+//            .withValue(Attendees.ATTENDEE_EMAIL, email)
+//            .withValue(Attendees.ATTENDEE_RELATIONSHIP, relationship)
+//            .withValue(Attendees.ATTENDEE_TYPE, type)
+//            .withValue(Attendees.ATTENDEE_STATUS, status);
+//        if (!Utils.isEmpty(email)) {
+//          builder.withValue(Attendees.ATTENDEE_EMAIL, email);
+//        }
+//        ops.add(builder.build());
+//      }
+//    }catch (Exception e) {
+//      throw e;
+//    }
+//    return null;
+//  }
   /**
    * 插入日程提醒，如果参数ops不为空，则不执行插入。
    * @param reminders
    * @param ops
    * @return Uri
    */
-  public Uri insertReminder(Map<String, String> reminders, ArrayList<ContentProviderOperation> ops)
-      throws Exception {
-    //---------------------------Reminders表的数据------------------------------------
-    //插入提醒，可以添加多个提醒
-    if (!Utils.isEmpty(reminders)) {
-      try {
-        String eventId		= reminders.get("eventId");//外键事件id
-        //如果时间id为空，不添加提醒
-        if (!isExistEvent(Long.parseLong(eventId))) {
-          return null;
-        }
-
-        String mimutes 		= reminders.get("mimutes");//提醒在事件前几分钟后发出
-        String method		= reminders.get("method");//提醒方法:METHOD_DEFAULT:0,*_ALERT:1,*_EMAIL:2,*_SMS:3
-
-        //提醒方法
-        int methodType = Reminders.METHOD_DEFAULT;
-        if (method.equals("1")) {
-          methodType = Reminders.METHOD_ALERT;
-        } else if (method.equals("2")) {
-          methodType = Reminders.METHOD_EMAIL;
-        } else if (method.equals("3")) {
-          methodType = Reminders.METHOD_SMS;
-        }
-        //提醒时间
-        int m = Utils.isNumber(mimutes) ? Integer.parseInt(mimutes) : 0;
-
-        if (ops == null) {
-          ContentValues alarmVal = new ContentValues();
-          alarmVal.put(Reminders.EVENT_ID, eventId);
-          alarmVal.put(Reminders.MINUTES, m);//提醒在事件前多少分钟后发出
-          alarmVal.put(Reminders.METHOD, methodType);
-
-          Uri uri = resolver.insert(remindersUri, alarmVal);
-          return uri;
-        } else {
-          ContentProviderOperation op = ContentProviderOperation.newInsert(remindersUri)
-              .withYieldAllowed(true)
-              .withValue(Reminders.EVENT_ID, eventId)
-              .withValue(Reminders.MINUTES, m)
-              .withValue(Reminders.METHOD, methodType)
-              .build();
-          ops.add(op);
-        }
-      } catch (Exception e) {
-        throw e;
-      }
-    }
-    return null;
-  }
+//  public Uri insertReminder(Map<String, String> reminders, ArrayList<ContentProviderOperation> ops)
+//      throws Exception {
+//    //---------------------------Reminders表的数据------------------------------------
+//    //插入提醒，可以添加多个提醒
+//    if (!Utils.isEmpty(reminders)) {
+//      try {
+//        String eventId		= reminders.get("eventId");//外键事件id
+//        //如果时间id为空，不添加提醒
+//        if (!isExistEvent(Long.parseLong(eventId))) {
+//          return null;
+//        }
+//
+//        String mimutes 		= reminders.get("mimutes");//提醒在事件前几分钟后发出
+//        String method		= reminders.get("method");//提醒方法:METHOD_DEFAULT:0,*_ALERT:1,*_EMAIL:2,*_SMS:3
+//
+//        //提醒方法
+//        int methodType = Reminders.METHOD_DEFAULT;
+//        if (method.equals("1")) {
+//          methodType = Reminders.METHOD_ALERT;
+//        } else if (method.equals("2")) {
+//          methodType = Reminders.METHOD_EMAIL;
+//        } else if (method.equals("3")) {
+//          methodType = Reminders.METHOD_SMS;
+//        }
+//        //提醒时间
+//        int m = Utils.isNumber(mimutes) ? Integer.parseInt(mimutes) : 0;
+//
+//        if (ops == null) {
+//          ContentValues alarmVal = new ContentValues();
+//          alarmVal.put(Reminders.EVENT_ID, eventId);
+//          alarmVal.put(Reminders.MINUTES, m);//提醒在事件前多少分钟后发出
+//          alarmVal.put(Reminders.METHOD, methodType);
+//
+//          Uri uri = resolver.insert(remindersUri, alarmVal);
+//          return uri;
+//        } else {
+//          ContentProviderOperation op = ContentProviderOperation.newInsert(remindersUri)
+//              .withYieldAllowed(true)
+//              .withValue(Reminders.EVENT_ID, eventId)
+//              .withValue(Reminders.MINUTES, m)
+//              .withValue(Reminders.METHOD, methodType)
+//              .build();
+//          ops.add(op);
+//        }
+//      } catch (Exception e) {
+//        throw e;
+//      }
+//    }
+//    return null;
+//  }
 
   /**
    * 查询event是否存在
@@ -676,136 +677,135 @@ public class CalendarManager {
 
   /**
    * 删除event表里数据
-   * @param id
    * @return
    */
-  public Map<String, String> delEvents(List<String> ids, String calendarId, boolean delAll){
-    Map<String, String> result = new HashMap<String, String>();
-
-    String selection = null;
-
-    if (delAll) {
-      selection = Events._ID + " > 0";
-    } else if (Utils.isNumber(calendarId)) {
-      selection = Events.CALENDAR_ID + "=" + calendarId;
-    } else if(Utils.isEmpty(ids)){
-      result.put("result", "0");
-      result.put("obj", "要删除日程事件的id为空！");
-      return result;
-    } else {
-      String where = "";
-      for (String id : ids) {
-        if (Utils.isNumber(id)) {
-          where += id + ",";
-        }
-      }
-      selection = Events._ID + " in(" + where.substring(0, where.length() - 1) + ")";
-    }
-
-    try {
-      Log.i(Const.APPTAG, "====：" + selection);
-      int n = resolver.delete(
-          eventsUri,
-          selection,
-          null);
-
-      result.put("result", "1");
-      result.put("obj", n + "");
-
-    } catch (Exception e) {
-      result.put("result", "-1");
-      result.put("obj", "删除错误：" + e.toString());
-    }
-    return result;
-  }
+//  public Map<String, String> delEvents(List<String> ids, String calendarId, boolean delAll){
+//    Map<String, String> result = new HashMap<String, String>();
+//
+//    String selection = null;
+//
+//    if (delAll) {
+//      selection = Events._ID + " > 0";
+//    } else if (Utils.isNumber(calendarId)) {
+//      selection = Events.CALENDAR_ID + "=" + calendarId;
+//    } else if(Utils.isEmpty(ids)){
+//      result.put("result", "0");
+//      result.put("obj", "要删除日程事件的id为空！");
+//      return result;
+//    } else {
+//      String where = "";
+//      for (String id : ids) {
+//        if (Utils.isNumber(id)) {
+//          where += id + ",";
+//        }
+//      }
+//      selection = Events._ID + " in(" + where.substring(0, where.length() - 1) + ")";
+//    }
+//
+//    try {
+//      Log.i(Const.APPTAG, "====：" + selection);
+//      int n = resolver.delete(
+//          eventsUri,
+//          selection,
+//          null);
+//
+//      result.put("result", "1");
+//      result.put("obj", n + "");
+//
+//    } catch (Exception e) {
+//      result.put("result", "-1");
+//      result.put("obj", "删除错误：" + e.toString());
+//    }
+//    return result;
+//  }
 
   /**
    * 更新日历的名称
    * @param param
    * @return Map
    */
-  public Map<String, String> updateCalendars(Map<String, String> param){
-    Map<String, String> result = new HashMap<String, String>();
-    if (Utils.isEmpty(param)) {
-      result.put("false", "更新参数不能为空！");
-      return result;
-    }
-
-    String calendarId = param.get("calendarId");
-    String displayName = param.get("displayName");
-
-    if (Utils.isEmpty(calendarId) && Utils.isNumber(calendarId)) {
-      result.put("false", "日历id不合法！");
-      return result;
-    }
-    if (Utils.isEmpty(displayName)) {
-      result.put("false", "日历名称不能为空！");
-      return result;
-    }
-
-    ContentValues values = new ContentValues();
-    values.put(Calendars.CALENDAR_DISPLAY_NAME, displayName);
-    Uri uri = ContentUris.withAppendedId(calendarsUri, Long.parseLong(calendarId));
-    int n = resolver.update(uri, values, null, null);
-    result.put("true", n + "");
-
-    return result;
-  }
+//  public Map<String, String> updateCalendars(Map<String, String> param){
+//    Map<String, String> result = new HashMap<String, String>();
+//    if (Utils.isEmpty(param)) {
+//      result.put("false", "更新参数不能为空！");
+//      return result;
+//    }
+//
+//    String calendarId = param.get("calendarId");
+//    String displayName = param.get("displayName");
+//
+//    if (Utils.isEmpty(calendarId) && Utils.isNumber(calendarId)) {
+//      result.put("false", "日历id不合法！");
+//      return result;
+//    }
+//    if (Utils.isEmpty(displayName)) {
+//      result.put("false", "日历名称不能为空！");
+//      return result;
+//    }
+//
+//    ContentValues values = new ContentValues();
+//    values.put(Calendars.CALENDAR_DISPLAY_NAME, displayName);
+//    Uri uri = ContentUris.withAppendedId(calendarsUri, Long.parseLong(calendarId));
+//    int n = resolver.update(uri, values, null, null);
+//    result.put("true", n + "");
+//
+//    return result;
+//  }
 
   /**
    * 根据账户查询账户日历
    * @param param Map<String, String>
    * @return List
    */
-  public List<Map<String, String>> queryCalendars(Map<String, String> param){
-    String accountName = null;
-    String accountType = null;
-    String ownerAccount = null;
-
-    if (!Utils.isEmpty(param)) {
-      accountName = param.get("accountName");//账户名称
-      accountType = param.get("accountType");//账户类型
-      ownerAccount = param.get("ownerAccount");//拥有者账户
-    }
-
-    List<Map<String, String>> calendars = new ArrayList<Map<String,String>>();
-
-    Cursor cursor = null;
-    StringBuffer selection = new StringBuffer(" 1 = 1 ");
-    List<String> selectionArgs = new ArrayList<String>();
-    //本地帐户查询：ACCOUNT_TYPE_LOCAL是一个特殊的日历账号类型，它不跟设备账号关联。这种类型的日历不同步到服务器
-    //如果是谷歌的账户是可以同步到服务器的
-    if (Utils.isEmpty(accountName) && Utils.isEmpty(accountType) && Utils.isEmpty(ownerAccount)) {
-      selection.append(" AND " + Calendars.ACCOUNT_TYPE + " = ? ");
-      selectionArgs.add("LOCAL");
-    } else {
-      if (!Utils.isEmpty(accountName)) {
-        selection.append(" AND " + Calendars.ACCOUNT_NAME + " = ? ");
-        selectionArgs.add(accountName);
-      }
-      if (!Utils.isEmpty(accountType)) {
-        selection.append(" AND " + Calendars.ACCOUNT_TYPE + " = ? ");
-        selectionArgs.add(accountType);
-      }
-      if (!Utils.isEmpty(ownerAccount)) {
-        selection.append(" AND " + Calendars.OWNER_ACCOUNT + " = ? ");
-        selectionArgs.add(ownerAccount);
-      }
-    }
-    cursor = resolver.query(calendarsUri, CALENDARS_COLUMNS, selection.toString(),
-        selectionArgs.toArray(new String[]{}), null);
-    while (cursor.moveToNext()) {
-      Map<String, String> calendar = new HashMap<String, String>();
-      // Get the field values
-      calendar.put("calendarId", cursor.getString(0));
-      calendar.put("accountName", cursor.getString(1));
-      calendar.put("displayName", cursor.getString(2));
-      calendar.put("ownerAccount", cursor.getString(3));
-      Log.i(Const.APPTAG, "查询到日历：" + calendar);
-      calendars.add(calendar);
-    }
-    return calendars;
-  }
+//  public List<Map<String, String>> queryCalendars(Map<String, String> param){
+//    String accountName = null;
+//    String accountType = null;
+//    String ownerAccount = null;
+//
+//    if (!Utils.isEmpty(param)) {
+//      accountName = param.get("accountName");//账户名称
+//      accountType = param.get("accountType");//账户类型
+//      ownerAccount = param.get("ownerAccount");//拥有者账户
+//    }
+//
+//    List<Map<String, String>> calendars = new ArrayList<Map<String,String>>();
+//
+//    Cursor cursor = null;
+//    StringBuffer selection = new StringBuffer(" 1 = 1 ");
+//    List<String> selectionArgs = new ArrayList<String>();
+//    //本地帐户查询：ACCOUNT_TYPE_LOCAL是一个特殊的日历账号类型，它不跟设备账号关联。这种类型的日历不同步到服务器
+//    //如果是谷歌的账户是可以同步到服务器的
+//    if (Utils.isEmpty(accountName) && Utils.isEmpty(accountType) && Utils.isEmpty(ownerAccount)) {
+//      selection.append(" AND " + Calendars.ACCOUNT_TYPE + " = ? ");
+//      selectionArgs.add("LOCAL");
+//    } else {
+//      if (!Utils.isEmpty(accountName)) {
+//        selection.append(" AND " + Calendars.ACCOUNT_NAME + " = ? ");
+//        selectionArgs.add(accountName);
+//      }
+//      if (!Utils.isEmpty(accountType)) {
+//        selection.append(" AND " + Calendars.ACCOUNT_TYPE + " = ? ");
+//        selectionArgs.add(accountType);
+//      }
+//      if (!Utils.isEmpty(ownerAccount)) {
+//        selection.append(" AND " + Calendars.OWNER_ACCOUNT + " = ? ");
+//        selectionArgs.add(ownerAccount);
+//      }
+//    }
+//    cursor = resolver.query(calendarsUri, CALENDARS_COLUMNS, selection.toString(),
+//        selectionArgs.toArray(new String[]{}), null);
+//    while (cursor.moveToNext()) {
+//      Map<String, String> calendar = new HashMap<String, String>();
+//      // Get the field values
+//      calendar.put("calendarId", cursor.getString(0));
+//      calendar.put("accountName", cursor.getString(1));
+//      calendar.put("displayName", cursor.getString(2));
+//      calendar.put("ownerAccount", cursor.getString(3));
+//      Log.i(Const.APPTAG, "查询到日历：" + calendar);
+//      calendars.add(calendar);
+//    }
+//    return calendars;
+//  }
 
 
 
@@ -956,8 +956,8 @@ public class CalendarManager {
     // 事件提醒的设定，Reminders表（如果没有下面的代码，那么提醒选项将会是无）
     ContentValues values = new ContentValues();
     values.put(CalendarContract.Reminders.EVENT_ID, ContentUris.parseId(newEvent));
-    // 提醒：提前10分钟有提醒（若注释掉或者设为0表示日程发生时）
-//    values.put(CalendarContract.Reminders.MINUTES, 10); // 应该在几分钟之前触发事件。
+    // 提醒：提前10分钟有提醒（若注释掉或者设为0表示日程发生时）（注释掉将不会有闹铃提醒）（无论HAS_ALARM是没有设置、设为1或是设为0，都会有闹铃）
+    values.put(CalendarContract.Reminders.MINUTES, 0); // 应该在几分钟之前触发事件。
     // 在服务上设置的报警的方法，下列设置之一：
     // 1.  METHOD_ALERT
     // 2.  METHOD_DEFAULT
